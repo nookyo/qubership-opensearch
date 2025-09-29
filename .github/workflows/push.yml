@@ -111,6 +111,7 @@ jobs:
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
   test-pipeline-run:
+    needs: multiplatform_build
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Run Opensearch Pipeline
