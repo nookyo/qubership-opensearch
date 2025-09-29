@@ -2,7 +2,7 @@ name: Build Artifacts
 permissions:
   contents: read
   packages: write
-  actions: read
+  actions: write
 on:
   release:
     types: [created]
