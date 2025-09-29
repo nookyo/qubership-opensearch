@@ -4,14 +4,18 @@ permissions:
   contents: read
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  #   branches: [main]
   workflow_run:
     workflows: ["Build Artifacts"]
     types:
       - completed
-
+  workflow_dispatch:
+    inputs:
+      service_branch:
+        description: 'Branch to run pipeline for'
+        required: true
 jobs:
   start-self-hosted-runner:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
