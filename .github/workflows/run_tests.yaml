@@ -4,6 +4,10 @@ permissions:
   contents: read
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+ 
   workflow_run:
     workflows: ["Build Artifacts"]
     types:
@@ -21,7 +25,7 @@ jobs:
           echo "Head branch is ${{ github.event.workflow_run.head_branch }}"
           echo "Pull Requests payload:"
           echo "${{ toJson(github.event.workflow_run.pull_requests) }}"
-          
+
   start-self-hosted-runner:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
