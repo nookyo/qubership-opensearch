@@ -16,7 +16,6 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
-    # if: github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Show debug info
         run: |
