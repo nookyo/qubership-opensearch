@@ -7,26 +7,28 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
- 
+
   workflow_run:
     workflows: ["Build Artifacts"]
     types:
       - completed
- 
+
 jobs:
   debug:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.event == 'pull_request'
+    # if: github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Show debug info
         run: |
           echo "Event payload:"
           echo "${{ toJson(github.event) }}"
           echo "Head branch is ${{ github.event.workflow_run.head_branch }}"
+           echo "Pull Request #${{ github.event.number }}"
+          echo "Source branch (head): ${{ github.head_ref }}"
+          echo "Target branch (base): ${{ github.base_ref }}"
           echo "Pull Requests payload:"
           echo "${{ toJson(github.event.workflow_run.pull_requests) }}"
 
-          
   # start-self-hosted-runner:
   #   if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
   #   uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
