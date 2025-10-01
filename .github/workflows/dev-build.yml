@@ -1,4 +1,4 @@
-name: Build Artifacts
+name: Build
 run-name: "Image for ${{ github.event.repository.name }}: ${{ github.run_number }} - ${{ github.actor }}"
 on:
     release:
@@ -35,51 +35,30 @@ on:
                 type: boolean
                 default: false
                 description: "Dry run mode"
+permissions:
+    contents: read
+    packages: write
+    
 jobs:
     prepare:
-        permissions:
-            contents: read
         name: "Prepare Images and Metadata"
         runs-on: ubuntu-latest
         outputs:
-            components: ${{ steps.load_component.outputs.components }}
-            platforms: ${{ steps.load_component.outputs.platforms }}
+            components: ${{ steps.load.outputs.components }}
+            platforms: ${{ steps.load.outputs.platforms }}
             metadata: "${{ steps.metadata.outputs.result }}"
         steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
-            - name: Load Docker Configuration
-              id: load_component
-              shell: bash
+            - id: load
               run: |
-                  verify=$(cat "$GITHUB_WORKSPACE/.github/dev-build-config.json" | jq '
-                    def verify_structure:
-                      .components as $components
-                      | .platforms as $platforms
-                      | ($components | type == "array")
-                      and (all($components[]; has("name") and has("file") and has("context")))
-                      and ($platforms | type == "string");
-                    verify_structure
-                    | if . then true else false end
-                  ')
-                  if [ "${verify}" == "true" ]; then
-                    echo "✅ $GITHUB_WORKSPACE/.github/docker-dev-config.json file is valid"
-                    components=$(jq -c ".components" "$GITHUB_WORKSPACE/.github/dev-build-config.json")
-                    platforms=$(jq -c ".platforms" "$GITHUB_WORKSPACE/.github/dev-build-config.json")
-                  else
-                    echo "❗ $GITHUB_WORKSPACE/.github/docker-dev-config.json file is invalid"
-                    echo "❗ $GITHUB_WORKSPACE/.github/docker-dev-config.json file is invalid" >> $GITHUB_STEP_SUMMARY
-                    exit 1
-                  fi
-                  echo "components=${components}" >> "$GITHUB_OUTPUT"
-                  echo "platforms=${platforms}" >> "$GITHUB_OUTPUT"
+                  echo "components=$(jq -c '.components' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
+                  echo "platforms=$(jq -c '.platforms' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
 
             - name: Create tags for images
               uses: netcracker/qubership-workflow-hub/actions/metadata-action@v1.0.7
               id: metadata
               with:
-                  short-sha: 11
                   extra-tags: ${{ github.event.inputs.tags }}
                   default-template: "{{ref-name}}"
                   dry-run: ${{ inputs.dry-run }}
