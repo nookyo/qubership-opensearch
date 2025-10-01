@@ -86,3 +86,26 @@ jobs:
           tags: ${{ needs.prepare.outputs.metadata }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-pipeline-run:
+    needs: build
+    runs-on: ubuntu-latest
+    if: success() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
+    steps:
+      - name: Trigger Run Opensearch Pipeline
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.workflow_run.pull_requests[0];
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'run_tests.yaml',
+              ref: 'main',
+              inputs: {
+                service_branch: context.payload.workflow_run.head_branch,
+                base_branch: pr ? pr.base.ref : '',
+                pr_number: pr ? pr.number : ''
+              }
+            })

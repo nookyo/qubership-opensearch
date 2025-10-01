@@ -4,14 +4,17 @@ permissions:
   contents: read
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
-
-  workflow_run:
-    workflows: ["Build Artifacts"]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      service_branch:
+        description: 'Branch to run pipeline for'
+        required: true
+      base_branch:
+        description: 'Base branch of the pull request'
+        required: false
+      pr_number:
+        description: 'Pull request number'
+        required: false
 
 jobs:
   debug:
@@ -19,17 +22,11 @@ jobs:
     steps:
       - name: Show debug info
         run: |
-          echo "Event payload:"
-          echo "${{ toJson(github.event) }}"
-          echo "Head branch is ${{ github.event.workflow_run.head_branch }}"
-           echo "Pull Request #${{ github.event.number }}"
-          echo "Source branch (head): ${{ github.head_ref }}"
-          echo "Target branch (base): ${{ github.base_ref }}"
-          echo "Pull Requests payload:"
-          echo "${{ toJson(github.event.workflow_run.pull_requests) }}"
-
-  # start-self-hosted-runner:
-  #   if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+          echo "Inputs from dispatch:"
+          echo "Service branch: ${{ github.event.inputs.service_branch }}"
+          echo "Base branch: ${{ github.event.inputs.base_branch }}"
+          echo "PR number: ${{ github.event.inputs.pr_number }}"
+          
   #   uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
   #   with:
   #     instance_id: ${{ vars.AWS_GITHUB_RUNNER_ID }}
