@@ -93,7 +93,7 @@ jobs:
     if: success() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
     steps:
       - name: Trigger Run Opensearch Pipeline
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
