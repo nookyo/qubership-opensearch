@@ -1,88 +1,88 @@
 name: Build
 run-name: "Image for ${{ github.event.repository.name }}: ${{ github.run_number }} - ${{ github.actor }}"
 on:
-    release:
-        types: [created]
-    push:
-        branches:
-            - "**"
-        paths-ignore:
-            - "docs/**"
-            - "CODE-OF-CONDUCT.md"
-            - "CONTRIBUTING.md"
-            - "LICENSE"
-            - "README.md"
-            - "SECURITY.md"
-    pull_request:
-        branches:
-            - "**"
-        paths-ignore:
-            - "docs/**"
-            - "CODE-OF-CONDUCT.md"
-            - "CONTRIBUTING.md"
-            - "LICENSE"
-            - "README.md"
-            - "SECURITY.md"
-    workflow_dispatch:
-        inputs:
-            tags:
-                required: false
-                type: string
-                default: ""
-                description: "Tags"
-            dry-run:
-                required: true
-                type: boolean
-                default: false
-                description: "Dry run mode"
+  release:
+    types: [created]
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+  pull_request:
+    branches:
+      - "**"
+    paths-ignore:
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+  workflow_dispatch:
+    inputs:
+      tags:
+        required: false
+        type: string
+        default: ""
+        description: "Tags"
+      dry-run:
+        required: true
+        type: boolean
+        default: false
+        description: "Dry run mode"
 permissions:
-    contents: read
-    packages: write
-    
+  contents: read
+  packages: write
+
 jobs:
-    prepare:
-        name: "Prepare Images and Metadata"
-        runs-on: ubuntu-latest
-        outputs:
-            components: ${{ steps.load.outputs.components }}
-            platforms: ${{ steps.load.outputs.platforms }}
-            metadata: "${{ steps.metadata.outputs.result }}"
-        steps:
-            - uses: actions/checkout@v4
+  prepare:
+    name: "Prepare Images and Metadata"
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.load.outputs.components }}
+      platforms: ${{ steps.load.outputs.platforms }}
+      metadata: "${{ steps.meta.outputs.result }}"
+    steps:
+      - uses: actions/checkout@v4
 
-            - id: load
-              run: |
-                  echo "components=$(jq -c '.components' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
-                  echo "platforms=$(jq -c '.platforms' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
+      - id: load
+        run: |
+          echo "components=$(jq -c '.components' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
+          echo "platforms=$(jq -c '.platforms' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
 
-            - name: Create tags for images
-              uses: netcracker/qubership-workflow-hub/actions/metadata-action@v1.0.7
-              id: metadata
-              with:
-                  extra-tags: ${{ github.event.inputs.tags }}
-                  default-template: "{{ref-name}}"
-                  dry-run: ${{ inputs.dry-run }}
+      - name: Create tags for images
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@v1.0.7
+        id: meta
+        with:
+          extra-tags: ${{ github.event.inputs.tags }}
+          default-template: "{{ref-name}}"
+          dry-run: ${{ inputs.dry-run }}
 
-    build:
-        name: Build Docker Images
-        needs: [prepare]
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-        strategy:
-            fail-fast: false
-            matrix:
-                component: ${{ fromJson(needs.prepare.outputs.components) }}
-        steps:
-            - name: Docker
-              uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
-              with:
-                  ref: ${{ github.ref }}
-                  dry-run: ${{ inputs.dry-run }}
-                  download-artifact: false
-                  component: ${{ toJson(matrix.component) }}
-                  platforms: ${{ needs.prepare.outputs.platforms }}
-                  tags: ${{ needs.prepare.outputs.metadata }}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    name: Build Docker Images
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJson(needs.prepare.outputs.components) }}
+    steps:
+      - name: Docker
+        uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
+        with:
+          ref: ${{ github.ref }}
+          dry-run: ${{ inputs.dry-run }}
+          download-artifact: false
+          component: ${{ toJson(matrix.component) }}
+          platforms: ${{ needs.prepare.outputs.platforms }}
+          tags: ${{ needs.prepare.outputs.metadata }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
