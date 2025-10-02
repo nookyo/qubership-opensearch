@@ -37,6 +37,6 @@ runs:
             workflow_id: '${{ inputs.workflow_id }}',
             ref: '${{ inputs.ref }}',
             inputs: {
-              pull_request: pull_request
+              pull_request: JSON.stringify(pull_request)
             }
           })
