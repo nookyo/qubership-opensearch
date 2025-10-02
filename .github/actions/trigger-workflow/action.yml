@@ -24,7 +24,7 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const pull_request = JSON.parse('${{ inputs.pull_request }}');
+          const pull_request = ${{ inputs.pull_request }};
 
           console.log('PR head ref:', pull_request.head.ref);
           console.log('PR head sha:', pull_request.head.sha);
