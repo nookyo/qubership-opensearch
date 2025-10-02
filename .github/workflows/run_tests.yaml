@@ -26,7 +26,7 @@ jobs:
       - name: Show debug info
         run: |
           echo "Inputs from dispatch:"
-          echo "Service branch: ${{ github.event.inputs.service_branch }}"
+          echo "Service branch: ${{ github.event.inputs.head_branch }}"
           echo "Head SHA: ${{ github.event.inputs.head_sha }}"
           echo "Base branch: ${{ github.event.inputs.base_branch }}"
           echo "PR number: ${{ github.event.inputs.pr_number }}"
