@@ -1,4 +1,4 @@
-# Qubership OpenSearch
+# Qubership OpenSearch 1
 
 Qubership OpenSearch is a comprehensive solution for deploying OpenSearch in Kubernetes with High Availability (HA), Disaster Recovery (DR), and Multi-AZ setups.
 Includes tools for backup management, monitoring, database as a service API and integration testing to ensure reliable operation and security.
