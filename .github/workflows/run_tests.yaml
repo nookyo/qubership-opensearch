@@ -4,29 +4,52 @@ permissions:
   contents: read
 
 on:
-  workflow_dispatch:
-    inputs:
-       pull_request:
-         description: 'Pull request data as JSON string'
-         required: true
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
 jobs:
   debug:
     runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' && 
+      github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Show debug info
-        run: |
-          echo "Inputs from dispatch:"
-          echo "PR JSON: ${{ inputs.pull_request }}"
-          
-      - name: Parse and show PR data
+      - name: Get PR data
         uses: actions/github-script@v8
+        id: pr-data
         with:
           script: |
-            const pr = JSON.parse('${{ inputs.pull_request }}');
-            console.log('Service branch:', pr.head.ref);
-            console.log('Head SHA:', pr.head.sha);
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${github.event.workflow_run.head_branch}`,
+              state: 'open'
+            });
+            
+            if (pullRequests.length === 0) {
+              throw new Error('No open PR found for head branch: ' + github.event.workflow_run.head_branch);
+            }
+            
+            const pr = pullRequests[0];
+            console.log('Found PR:', pr.number);
+            console.log('Head branch:', pr.head.ref);
             console.log('Base branch:', pr.base.ref);
-            console.log('PR number:', pr.number);
+            console.log('Head SHA:', pr.head.sha);
+            
+            return {
+              number: pr.number,
+              head_branch: pr.head.ref,
+              base_branch: pr.base.ref,
+              head_sha: pr.head.sha
+            };
+            
+      - name: Show PR info
+        run: |
+          echo "PR Number: ${{ fromJson(steps.pr-data.outputs.result).number }}"
+          echo "Head Branch: ${{ fromJson(steps.pr-data.outputs.result).head_branch }}"
+          echo "Base Branch: ${{ fromJson(steps.pr-data.outputs.result).base_branch }}"
+          echo "Head SHA: ${{ fromJson(steps.pr-data.outputs.result).head_sha }}"
           
   #   uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
   #   with:

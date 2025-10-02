@@ -87,28 +87,4 @@ jobs:
   #       env:
   #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  test-pipeline-run:
-    # needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    if: success() && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
-    steps:
-      - uses : actions/checkout@v4
-      - name: Inspect context
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "SHA: ${{ github.sha }}"
-          echo "PR number: ${{ github.event.number || 'N/A' }}"
-          echo "PR head ref: ${{ github.event.pull_request.head.ref || 'N/A' }}"
-          echo "PR head sha: ${{ github.event.pull_request.head.sha || 'N/A' }}"
-          echo "PR base ref: ${{ github.event.pull_request.base.ref || 'N/A' }}"
 
-      - name: Trigger Run Opensearch Pipeline
-        uses: ./.github/actions/trigger-workflow
-        with:
-          workflow_id: 'run_tests.yaml'
-          ref: 'main'
-          pull_request: ${{ toJson(github.event.pull_request) }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
