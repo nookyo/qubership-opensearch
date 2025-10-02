@@ -11,38 +11,4 @@ jobs:
   test-line:
     runs-on: ubuntu-latest
     steps:
-      - name: Mark run-tests status pending
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const sha = context.payload.pull_request.head.sha;
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha,
-              state: 'pending',
-              context: 'run-tests',
-              description: 'Waiting for post-build tests'
-            });
-
-      - name: Run tests
-        run: |
-          echo "Running tests..."
-          # Add your test commands here
-          echo "Tests completed."
-
-      - name: Mark run-tests status failed
-        if: ${{ failure() && github.event_name == 'pull_request' }}
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const sha = context.payload.pull_request.head.sha;
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha,
-              state: 'failure',
-              context: 'run-tests',
-              description: 'Prerequisite workflow failed'
-            });
+        - run: echo "This is a test line"
