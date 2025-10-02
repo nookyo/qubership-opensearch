@@ -6,19 +6,9 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      head_branch:
-        description: 'Branch to run pipeline for'
-        required: true
-      head_sha:
-        description: 'SHA of the head commit'
-        required: false
-      base_branch:
-        description: 'Base branch of the pull request'
-        required: false
-      pr_number:
-        description: 'Pull request number'
-        required: false
-
+       pull_request:
+         description: 'Pull request data as JSON string'
+         required: true
 jobs:
   debug:
     runs-on: ubuntu-latest
@@ -26,10 +16,10 @@ jobs:
       - name: Show debug info
         run: |
           echo "Inputs from dispatch:"
-          echo "Service branch: ${{ github.event.inputs.head_branch }}"
-          echo "Head SHA: ${{ github.event.inputs.head_sha }}"
-          echo "Base branch: ${{ github.event.inputs.base_branch }}"
-          echo "PR number: ${{ github.event.inputs.pr_number }}"
+          echo "Service branch: ${{ inputs.pull_request.head.ref }}"
+          echo "Head SHA: ${{ inputs.pull_request.head_sha }}"
+          echo "Base branch: ${{ inputs.pull_request.base_branch }}"
+          echo "PR number: ${{ inputs.pull_request.pr_number }}"
           
   #   uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
   #   with:

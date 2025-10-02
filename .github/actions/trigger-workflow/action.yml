@@ -1,0 +1,42 @@
+name: 'Trigger Workflow Dispatch'
+description: 'Dispatches a workflow with PR data'
+
+inputs:
+  workflow_id:
+    description: 'Workflow file name (e.g., run_tests.yaml)'
+    required: true
+  ref:
+    description: 'Ref to run workflow on (e.g., main)'
+    default: 'main'
+    required: true
+  pull_request:
+    description: 'Pull request data as JSON string'
+    required: true
+  github-token:
+    description: 'GitHub token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Dispatch workflow
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const pull_request = JSON.parse('${{ inputs.pull_request }}');
+
+          console.log('PR head ref:', pull_request.head.ref);
+          console.log('PR head sha:', pull_request.head.sha);
+          console.log('PR base ref:', pull_request.base.ref);
+          console.log('PR number:', pull_request.number);
+
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: '${{ inputs.workflow_id }}',
+            ref: '${{ inputs.ref }}',
+            inputs: {
+              pull_request: pull_request
+            }
+          })

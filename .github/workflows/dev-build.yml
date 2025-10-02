@@ -105,24 +105,9 @@ jobs:
           echo "PR base ref: ${{ github.event.pull_request.base.ref || 'N/A' }}"
 
       - name: Trigger Run Opensearch Pipeline
-        uses: actions/github-script@v8
+        uses: ./.github/actions/trigger-workflow
         with:
+          workflow_id: 'run_tests.yaml'
+          ref: 'main'
+          pull_request: ${{ toJson(github.event.pull_request) }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            console.log('PR head ref:', pr.head.ref);
-            console.log('PR head sha:', pr.head.sha);
-            console.log('PR base ref:', pr.base.ref);
-            console.log('PR number:', pr.number);
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'run_tests.yaml',
-              ref: 'main',
-              inputs: {
-                head_branch: pr.head.ref,
-                head_sha: pr.head.sha,
-                base_branch: pr.base.ref,
-                pr_number: `${pr.number}`
-              }
-            })
