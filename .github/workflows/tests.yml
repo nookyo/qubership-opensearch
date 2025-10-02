@@ -1,13 +1,104 @@
 name: Run tests
+
+permissions:
+  contents: read
+  statuses: write
+
 on:
-   pull_request:
-     branches:
-       - main
+  workflow_run:
+    workflows:
+      - Running flow
+    types:
+      - completed
+
 jobs:
-  test:
+  run-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Fetch PR metadata
+        uses: actions/github-script@v8
+        id: pr
+        with:
+          script: |
+            const headBranch = context.payload.workflow_run.head_branch;
+            const headSha = context.payload.workflow_run.head_sha;
+
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${headBranch}`,
+              state: 'open'
+            });
+
+            if (!pullRequests.length) {
+              core.warning(`No open PR found for head branch ${headBranch}`);
+              return null;
+            }
+
+            const pr = pullRequests[0];
+
+            if (pr.base.ref !== 'main') {
+              core.warning(`PR #${pr.number} targets ${pr.base.ref}, skipping.`);
+              return null;
+            }
+
+            return {
+              number: pr.number,
+              headBranch: pr.head.ref,
+              baseBranch: pr.base.ref,
+              headSha
+            };
+
+      - name: Skip when PR not eligible
+        if: ${{ fromJson(steps.pr.outputs.result) == null }}
+        run: echo "No matching PR to process."
+
+      - name: Set status pending
+        if: ${{ fromJson(steps.pr.outputs.result) != null }}
+        uses: actions/github-script@v8
+        env:
+          PR_DATA: ${{ steps.pr.outputs.result }}
+        with:
+          script: |
+            const pr = JSON.parse(process.env.PR_DATA);
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.headSha,
+              state: 'pending',
+              context: 'run-tests',
+              description: 'Tests are running'
+            });
+
+      - name: Run tests
+        if: ${{ fromJson(steps.pr.outputs.result) != null }}
+        id: tests
+        run: |
           echo "Running tests..."
           # Add your test commands here
           echo "Tests completed."
+
+      - name: Publish final status
+        if: ${{ always() && fromJson(steps.pr.outputs.result) != null }}
+        uses: actions/github-script@v8
+        env:
+          PR_DATA: ${{ steps.pr.outputs.result }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+        with:
+          script: |
+            const pr = JSON.parse(process.env.PR_DATA);
+            const outcome = process.env.TEST_OUTCOME;
+            const state = outcome === 'success' ? 'success' : 'failure';
+            const description = state === 'success'
+              ? 'Tests completed successfully'
+              : 'Tests failed';
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.headSha,
+              state,
+              context: 'run-tests',
+              description
+            });
