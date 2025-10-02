@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: write
-    if: success() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
+    if: success() && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
     steps:
       - name: Inspect context
         run: |
@@ -109,22 +109,20 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const isPR = context.eventName === 'pull_request';
-            const pr = isPR ? context.payload.pull_request : null;
-            console.log('Event name:', context.eventName);
-            console.log('PR head ref:', isPR ? pr.head.ref : 'N/A');
-            console.log('PR head sha:', isPR ? pr.head.sha : 'N/A');
-            console.log('PR base ref:', isPR ? pr.base.ref : 'N/A');
-            console.log('PR number:', isPR ? pr.number : 'N/A');
+            const pr = context.payload.pull_request;
+            console.log('PR head ref:', pr.head.ref);
+            console.log('PR head sha:', pr.head.sha);
+            console.log('PR base ref:', pr.base.ref);
+            console.log('PR number:', pr.number);
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'run_tests.yaml',
               ref: 'main',
               inputs: {
-                service_branch: isPR ? pr.head.ref : context.ref.replace('refs/heads/', ''),
-                head_sha: isPR ? pr.head.sha : context.sha,
-                base_branch: isPR ? pr.base.ref : '',
-                pr_number: isPR ? pr.number : ''
+                head_branch: pr.head.ref,
+                head_sha: pr.head.sha,
+                base_branch: pr.base.ref,
+                pr_number: `${pr.number}`
               }
             })
