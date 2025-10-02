@@ -97,25 +97,32 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
           echo "Ref: ${{ github.ref }}"
           echo "SHA: ${{ github.sha }}"
-          echo "Event payload (first 500 chars):"
-          echo "${{ toJson(github.event) }}" | head -c 500
+          echo "PR number: ${{ github.event.number || 'N/A' }}"
+          echo "PR head ref: ${{ github.event.pull_request.head.ref || 'N/A' }}"
+          echo "PR head sha: ${{ github.event.pull_request.head.sha || 'N/A' }}"
+          echo "PR base ref: ${{ github.event.pull_request.base.ref || 'N/A' }}"
 
-      # - name: Trigger Run Opensearch Pipeline
-        # uses: actions/github-script@v8
-        # with:
-        #   github-token: ${{ secrets.GITHUB_TOKEN }}
-        #   script: |
-        #     const isPR = context.eventName === 'pull_request';
-        #     const pr = isPR ? context.payload : null;
-        #     await github.rest.actions.createWorkflowDispatch({
-        #       owner: context.repo.owner,
-        #       repo: context.repo.repo,
-        #       workflow_id: 'run_tests.yaml',
-        #       ref: 'main',
-        #       inputs: {
-        #         service_branch: isPR ? pr.head.ref : context.ref.replace('refs/heads/', ''),
-        #         head_sha: isPR ? pr.head.sha : context.sha,
-        #         base_branch: isPR ? pr.base.ref : '',
-        #         pr_number: isPR ? pr.number : ''
-        #       }
-        #     })
+      - name: Trigger Run Opensearch Pipeline
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const isPR = context.eventName === 'pull_request';
+            const pr = isPR ? context.payload.pull_request : null;
+            console.log('Event name:', context.eventName);
+            console.log('PR head ref:', isPR ? pr.head.ref : 'N/A');
+            console.log('PR head sha:', isPR ? pr.head.sha : 'N/A');
+            console.log('PR base ref:', isPR ? pr.base.ref : 'N/A');
+            console.log('PR number:', isPR ? pr.number : 'N/A');
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'run_tests.yaml',
+              ref: 'main',
+              inputs: {
+                service_branch: isPR ? pr.head.ref : context.ref.replace('refs/heads/', ''),
+                head_sha: isPR ? pr.head.sha : context.sha,
+                base_branch: isPR ? pr.base.ref : '',
+                pr_number: isPR ? pr.number : ''
+              }
+            })
