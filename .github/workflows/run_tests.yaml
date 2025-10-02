@@ -6,7 +6,7 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      service_branch:
+      head_branch:
         description: 'Branch to run pipeline for'
         required: true
       head_sha:
