@@ -90,6 +90,8 @@ jobs:
   test-pipeline-run:
     # needs: build
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     if: success() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
     steps:
       - name: Inspect context
