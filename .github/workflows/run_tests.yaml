@@ -11,24 +11,39 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
-    if: |
-      github.event.workflow_run.event == 'pull_request' && 
-      github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_run'
     steps:
+      - name: Debug context
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Workflow run event: ${{ github.event.workflow_run.event || 'N/A' }}"
+          echo "Head branch: ${{ github.event.workflow_run.head_branch || 'N/A' }}"
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion || 'N/A' }}"
+          
       - name: Get PR data
         uses: actions/github-script@v8
         id: pr-data
         with:
           script: |
+            console.log('Context event:', context.eventName);
+            console.log('Workflow run:', context.payload.workflow_run);
+            
+            if (!context.payload.workflow_run) {
+              throw new Error('No workflow_run data available');
+            }
+            
+            const headBranch = context.payload.workflow_run.head_branch;
+            console.log('Looking for PR with head branch:', headBranch);
+            
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${github.event.workflow_run.head_branch}`,
+              head: `${context.repo.owner}:${headBranch}`,
               state: 'open'
             });
             
             if (pullRequests.length === 0) {
-              throw new Error('No open PR found for head branch: ' + github.event.workflow_run.head_branch);
+              throw new Error('No open PR found for head branch: ' + headBranch);
             }
             
             const pr = pullRequests[0];
