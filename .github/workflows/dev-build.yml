@@ -63,32 +63,32 @@ jobs:
           default-template: "{{ref-name}}"
           dry-run: ${{ inputs.dry-run }}
 
-  build:
-    name: Build Docker Images
-    needs: [prepare]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJson(needs.prepare.outputs.components) }}
-    steps:
-      - name: Docker
-        uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
-        with:
-          ref: ${{ github.ref }}
-          dry-run: ${{ inputs.dry-run }}
-          download-artifact: false
-          component: ${{ toJson(matrix.component) }}
-          platforms: ${{ needs.prepare.outputs.platforms }}
-          tags: ${{ needs.prepare.outputs.metadata }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build:
+  #   name: Build Docker Images
+  #   needs: [prepare]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       component: ${{ fromJson(needs.prepare.outputs.components) }}
+  #   steps:
+  #     - name: Docker
+  #       uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
+  #       with:
+  #         ref: ${{ github.ref }}
+  #         dry-run: ${{ inputs.dry-run }}
+  #         download-artifact: false
+  #         component: ${{ toJson(matrix.component) }}
+  #         platforms: ${{ needs.prepare.outputs.platforms }}
+  #         tags: ${{ needs.prepare.outputs.metadata }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test-pipeline-run:
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
     if: success() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
     steps:
@@ -105,6 +105,7 @@ jobs:
               ref: 'main',
               inputs: {
                 service_branch: context.payload.workflow_run.head_branch,
+                head_sha: context.payload.workflow_run.head_sha,
                 base_branch: pr ? pr.base.ref : '',
                 pr_number: pr ? pr.number : ''
               }
