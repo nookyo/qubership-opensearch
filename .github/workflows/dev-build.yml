@@ -94,6 +94,7 @@ jobs:
       actions: write
     if: success() && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
     steps:
+      - uses : actions/checkout@v4
       - name: Inspect context
         run: |
           echo "Event name: ${{ github.event_name }}"
