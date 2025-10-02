@@ -65,7 +65,23 @@ jobs:
           echo "Head Branch: ${{ fromJson(steps.pr-data.outputs.result).head_branch }}"
           echo "Base Branch: ${{ fromJson(steps.pr-data.outputs.result).base_branch }}"
           echo "Head SHA: ${{ fromJson(steps.pr-data.outputs.result).head_sha }}"
-          
+
+      - name: Create status check
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prData = ${{ steps.pr-data.outputs.result }};
+            if (!prData) return;
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: prData.head_sha,
+              state: 'success',
+              description: 'Tests triggered from dev-build',
+              context: 'run-tests-pipeline'
+            });      
+              
   #   uses: Netcracker/qubership-terraform-hub/.github/workflows/ec2-control.yml@main
   #   with:
   #     instance_id: ${{ vars.AWS_GITHUB_RUNNER_ID }}
