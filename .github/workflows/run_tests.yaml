@@ -7,34 +7,29 @@ permissions:
   pull-requests: write
 
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      example_input:
+        description: 'An example input'
+        required: false
+        default: 'default value'
+#   workflow_run:
+#     workflows: ["Build"]
+#     types:
+#       - completed
+#     branches:
+#       - main
+
 jobs:
-  debug:
+  run-tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
     steps:
-      - name: Debug context
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Workflow run event: ${{ github.event.workflow_run.event || 'N/A' }}"
-          echo "Head branch: ${{ github.event.workflow_run.head_branch || 'N/A' }}"
-          echo "Conclusion: ${{ github.event.workflow_run.conclusion || 'N/A' }}"
-          
       - name: Get PR data
         uses: actions/github-script@v8
         id: pr-data
         with:
           script: |
-            console.log('Context event:', context.eventName);
-            console.log('Workflow run:', context.payload.workflow_run);
-            
-            if (!context.payload.workflow_run) {
-              throw new Error('No workflow_run data available');
-            }
-            
             const headBranch = context.payload.workflow_run.head_branch;
             console.log('Looking for PR with head branch:', headBranch);
             
@@ -46,10 +41,17 @@ jobs:
             });
             
             if (pullRequests.length === 0) {
-              throw new Error('No open PR found for head branch: ' + headBranch);
+              console.log('No open PR found for head branch:', headBranch);
+              return null;
             }
             
             const pr = pullRequests[0];
+            
+            if (pr.base.ref !== 'main') {
+              console.log('PR is not to main branch, skipping');
+              return null;
+            }
+            
             console.log('Found PR:', pr.number);
             console.log('Head branch:', pr.head.ref);
             console.log('Base branch:', pr.base.ref);
@@ -61,27 +63,60 @@ jobs:
               base_branch: pr.base.ref,
               head_sha: pr.head.sha
             };
+
+      - name: Set pending status
+        if: fromJson(steps.pr-data.outputs.result) != null
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prData = ${{ steps.pr-data.outputs.result }};
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: prData.head_sha,
+              state: 'pending',
+              description: 'Running tests...',
+              context: 'run-tests-pipeline'
+            });
             
       - name: Show PR info
+        if: fromJson(steps.pr-data.outputs.result) != null
         run: |
           echo "PR Number: ${{ fromJson(steps.pr-data.outputs.result).number }}"
           echo "Head Branch: ${{ fromJson(steps.pr-data.outputs.result).head_branch }}"
           echo "Base Branch: ${{ fromJson(steps.pr-data.outputs.result).base_branch }}"
           echo "Head SHA: ${{ fromJson(steps.pr-data.outputs.result).head_sha }}"
 
-      - name: Create status check
+      - name: Set success status
+        if: success() && fromJson(steps.pr-data.outputs.result) != null
         uses: actions/github-script@v8
         with:
           script: |
             const prData = ${{ steps.pr-data.outputs.result }};
-            if (!prData) return;
             
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: prData.head_sha,
               state: 'success',
-              description: 'Tests triggered from dev-build',
+              description: 'Tests completed successfully',
+              context: 'run-tests-pipeline'
+            });
+
+      - name: Set failure status
+        if: failure() && fromJson(steps.pr-data.outputs.result) != null
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prData = ${{ steps.pr-data.outputs.result }};
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: prData.head_sha,
+              state: 'failure',
+              description: 'Tests failed',
               context: 'run-tests-pipeline'
             });      
               
