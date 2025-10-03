@@ -19,7 +19,7 @@ jobs:
           max-wait: 1
           repository: ${{ github.repository }}
           interval: 10
-          timeout: 300
+          timeout: 60
 
   second:
     needs: wait-for-first
