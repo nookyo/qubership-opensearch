@@ -1,42 +1,44 @@
-name: 'Trigger Workflow Dispatch'
-description: 'Dispatches a workflow with PR data'
-
+# .github/actions/wait-for-workflow/action.yml
+name: Wait for Workflow
+description: Waits until another workflow completes
 inputs:
-  workflow_id:
-    description: 'Workflow file name (e.g., run_tests.yaml)'
+  workflow:
+    description: "Workflow name to wait for"
     required: true
-  ref:
-    description: 'Ref to run workflow on (e.g., main)'
-    default: 'main'
+  branch:
+    description: "Branch name"
     required: true
-  pull_request:
-    description: 'Pull request data as JSON string'
-    required: true
-  github-token:
-    description: 'GitHub token'
-    required: true
-
+    default: ${{ github.head_ref }}
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-    - name: Dispatch workflow
-      uses: actions/github-script@v8
-      with:
-        github-token: ${{ inputs.github-token }}
-        script: |
-          const pull_request = ${{ inputs.pull_request }};
+    - name: Wait for ${{ inputs.workflow }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        echo "⏳ Waiting for '${{ inputs.workflow }}' on branch ${{ inputs.branch }}..."
+        while true; do
+          run_info=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow "${{ inputs.workflow }}" \
+            --branch "${{ inputs.branch }}" \
+            --event pull_request \
+            --json status,conclusion \
+            --jq '.[0]')
 
-          console.log('PR head ref:', pull_request.head.ref);
-          console.log('PR head sha:', pull_request.head.sha);
-          console.log('PR base ref:', pull_request.base.ref);
-          console.log('PR number:', pull_request.number);
+          status=$(echo "$run_info" | jq -r .status)
+          conclusion=$(echo "$run_info" | jq -r .conclusion)
 
-          await github.rest.actions.createWorkflowDispatch({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: '${{ inputs.workflow_id }}',
-            ref: '${{ inputs.ref }}',
-            inputs: {
-              pull_request: JSON.stringify(pull_request)
-            }
-          })
+          echo "Current status: $status / $conclusion"
+
+          if [[ "$status" == "completed" && "$conclusion" == "success" ]]; then
+            echo "✅ Workflow succeeded!"
+            break
+          elif [[ "$status" == "completed" ]]; then
+            echo "❌ Workflow failed or cancelled"
+            exit 1
+          fi
+
+          sleep 20
+        done
