@@ -1,29 +1,28 @@
 name: Second Workflow
-permissions:
-    contents: read
-
-    pull-requests: read
-    statuses: write
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened]
-        branches:
-            - main
-env:
-    GITHUB_TOKEN: ${{ github.token }}
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
-    wait-for-first:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: ./.github/actions/wait-for-workflow
-              with:
-                  workflow: "First Workflow"
-                  branch: ${{ github.head_ref }}
-    second:
-        needs: wait-for-first
-        runs-on: ubuntu-latest
-        steps:
-            - run: echo "🚀 Running Second Workflow after First"
+  wait-for-first:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kamilchodola/wait-for-workflow-action@main
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: "First Workflow"   # имя или id workflow
+          org_name: "nookyo"              # твой owner/organization
+          repo_name: "qubership-opensearch"
+          ref: ${{ github.head_ref }}     # чтобы ждать именно этот PR
+          interval: 30                    # (сек) как часто опрашивать
+          timeout: 600                    # (сек) сколько максимум ждать
+
+  second:
+    needs: wait-for-first
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🚀 Running Second Workflow after First"
