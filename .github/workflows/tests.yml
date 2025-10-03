@@ -1,5 +1,4 @@
-name: Run tests
-
+name: Second Workflow
 permissions:
   contents: read
 

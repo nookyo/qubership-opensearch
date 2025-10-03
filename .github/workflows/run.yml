@@ -1,4 +1,5 @@
-name: Running flow
+name: First Workflow
+ 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
