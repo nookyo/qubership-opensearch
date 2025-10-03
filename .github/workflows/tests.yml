@@ -24,7 +24,7 @@ jobs:
           echo "⏳ Waiting for 'First Workflow' on branch ${{ github.head_ref }}..."
           while true; do
             run_info=$(gh run list \
-              --workflow "First Workflow" \
+              --workflow "Running flow" \
               --branch "${{ github.head_ref }}" \
               --event pull_request \
               --json status,conclusion \
