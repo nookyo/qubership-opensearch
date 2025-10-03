@@ -11,15 +11,15 @@ jobs:
   wait-for-first:
     runs-on: ubuntu-latest
     steps:
-      - uses: kamilchodola/wait-for-workflow-action@main
+      - name: Wait for First Workflow
+        uses: lucasssvaz/wait-on-workflow@v1.0.0
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          workflow_id: "First Workflow"   # имя или id workflow
-          org_name: "nookyo"              # твой owner/organization
-          repo_name: "qubership-opensearch"
-          ref: ${{ github.head_ref }}     # чтобы ждать именно этот PR
-          interval: 30                    # (сек) как часто опрашивать
-          timeout: 600                    # (сек) сколько максимум ждать
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: "First Workflow"
+          max-wait: 3
+          repository: ${{ github.repository }}
+          interval: 30
+          timeout: 600
 
   second:
     needs: wait-for-first
