@@ -1,51 +1,33 @@
 name: Second Workflow
 permissions:
-  contents: read
+    contents: read
 
-  pull-requests: read
-  statuses: write
+    pull-requests: read
+    statuses: write
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
+    pull_request:
+        types: [opened, synchronize, reopened]
+        branches:
+            - main
 env:
-  GITHUB_TOKEN: ${{ github.token }}   
+    GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
-  wait-for-first:
-    runs-on: ubuntu-latest
-    steps:
-     - name: Wait for First Workflow
-       run: |
-            echo "⏳ Waiting for 'First Workflow' on branch ${{ github.head_ref }}..."
-            while true; do
-            run_info=$(gh run list \
-                --repo "${{ github.repository }}" \
-                --workflow "First Workflow" \
-                --branch "${{ github.head_ref }}" \
-                --event pull_request \
-                --json status,conclusion \
-                --jq '.[0]')
-
-            status=$(echo "$run_info" | jq -r .status)
-            conclusion=$(echo "$run_info" | jq -r .conclusion)
-
-            echo "Current status: $status / $conclusion"
-
-            if [[ "$status" == "completed" && "$conclusion" == "success" ]]; then
-                echo "✅ First Workflow succeeded!"
-                break
-            elif [[ "$status" == "completed" ]]; then
-                echo "❌ First Workflow failed or cancelled"
-                exit 1
-            fi
-
-            sleep 20
-            done
-  second:
-    needs: wait-for-first
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🚀 Running Second Workflow after First"
+    wait-for-first:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Wait for First Workflow
+              run: |
+                  gh run watch \
+                  --repo "${{ github.repository }}" \
+                  --workflow "First Workflow" \
+                  --branch "${{ github.head_ref }}" \
+                  --exit-status
+        env:
+            GH_TOKEN: ${{ github.token }}
+    second:
+        needs: wait-for-first
+        runs-on: ubuntu-latest
+        steps:
+            - run: echo "🚀 Running Second Workflow after First"
