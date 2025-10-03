@@ -2,6 +2,7 @@ name: Run tests
 
 permissions:
   contents: read
+
   pull-requests: read
   statuses: write
 
@@ -12,7 +13,41 @@ on:
       - main
 
 jobs:
-  run-tests:
+  wait-for-first:
     runs-on: ubuntu-latest
     steps:
-     - run: echo "Running tests..."
+      - name: Authenticate GitHub CLI
+        run: echo "${{ github.token }}" | gh auth login --with-token
+
+      - name: Wait for First Workflow
+        run: |
+          echo "⏳ Waiting for 'First Workflow' on branch ${{ github.head_ref }}..."
+          while true; do
+            run_info=$(gh run list \
+              --workflow "First Workflow" \
+              --branch "${{ github.head_ref }}" \
+              --event pull_request \
+              --json status,conclusion \
+              --jq '.[0]')
+
+            status=$(echo "$run_info" | jq -r .status)
+            conclusion=$(echo "$run_info" | jq -r .conclusion)
+
+            echo "Current status: $status / $conclusion"
+
+            if [[ "$status" == "completed" && "$conclusion" == "success" ]]; then
+              echo "✅ First Workflow succeeded!"
+              break
+            elif [[ "$status" == "completed" ]]; then
+              echo "❌ First Workflow failed or cancelled"
+              exit 1
+            fi
+
+            sleep 20
+          done
+
+  second:
+    needs: wait-for-first
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🚀 Running Second Workflow after First"
