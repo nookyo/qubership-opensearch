@@ -19,13 +19,18 @@ jobs:
         steps:
             - name: Wait for First Workflow
               run: |
-                  gh run watch \
+                  run_id=$(gh run list \
                   --repo "${{ github.repository }}" \
                   --workflow "First Workflow" \
                   --branch "${{ github.head_ref }}" \
-                  --exit-status
-        env:
-            GH_TOKEN: ${{ github.token }}
+                  --event pull_request \
+                  --json databaseId \
+                  --jq '.[0].databaseId')
+
+                  echo "Watching run $run_id of First Workflow..."
+                  gh run watch $run_id --repo "${{ github.repository }}" --exit-status
+              env:
+                  GH_TOKEN: ${{ github.token }}
     second:
         needs: wait-for-first
         runs-on: ubuntu-latest
