@@ -17,7 +17,7 @@ jobs:
     wait-for-first:
         runs-on: ubuntu-latest
         steps:
-            - uses: ./.github/actions/wait-for-workflow
+            - uses: ./.github/actions/wait-for-workflow@main
               with:
                   workflow: "First Workflow"
                   branch: ${{ github.head_ref }}
