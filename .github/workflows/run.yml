@@ -14,4 +14,4 @@ jobs:
     steps:
       - run: echo "First workflow is running..."
       - run: sleep 45 
-      - run: echo "First workflow finishe
+      - run: echo "First workflow finishe"
