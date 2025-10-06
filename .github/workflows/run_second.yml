@@ -14,7 +14,7 @@ jobs:
       - name: Wait for First Workflow
         uses: netcracker/qubership-workflow-hub/actions/wait-on-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
         with:
-          workflow: First Workflow
+          workflow: "First Workflow"
           poll-interval-seconds: 10
           timeout-minutes: 30
 
