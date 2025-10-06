@@ -12,14 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for First Workflow
-        uses: lucasssvaz/wait-on-workflow@v1.0.0
+        uses: netcracker/qubership-workflow-hub/actions/wait-on-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: "First Workflow"
-          max-wait: 1
-          repository: ${{ github.repository }}
-          interval: 10
-          timeout: 60
+          workflow: First Workflow
+          poll-interval-seconds: 10
+          timeout-minutes: 30
+
 
   second:
     needs: wait-for-first
