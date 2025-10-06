@@ -11,6 +11,8 @@ jobs:
   wait-for-first:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Wait for First Workflow
         uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
         with:
