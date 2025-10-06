@@ -19,6 +19,7 @@ jobs:
           workflow: "First Workflow"
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.pull_request.number }}
 
   second:
     needs: wait-for-first
