@@ -13,5 +13,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "First workflow is running..."
-      - run: sleep 10
+      - run: sleep 45
       - run: echo "First workflow finishe"
