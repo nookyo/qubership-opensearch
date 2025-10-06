@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for First Workflow
-        uses: netcracker/qubership-workflow-hub/actions/wait-on-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
+        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
         with:
           workflow: "First Workflow"
           ref: ${{ github.head_ref }}
