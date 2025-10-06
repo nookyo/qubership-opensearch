@@ -2,6 +2,12 @@ name: Second Workflow
 
 on:
   pull_request:
+  workflow_run:
+    workflows: ["First Workflow"]
+    types:
+      - completed
+  workflow_dispatch:
+  workflow_call:
 
 permissions:
   actions: read
@@ -18,7 +24,7 @@ jobs:
         with:
           workflow: "run_first.yml"
           # sha: ${{ github.sha }}
-          compact: true
+
           token: ${{ secrets.GITHUB_TOKEN }}
           # pr-number: ${{ github.event.pull_request.number }}
 
