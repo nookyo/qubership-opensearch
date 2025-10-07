@@ -1,5 +1,5 @@
 name: Test flow for Matadata action
-on: 
+on:
   workflow_dispatch:
 
 
