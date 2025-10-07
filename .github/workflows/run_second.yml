@@ -13,7 +13,7 @@ jobs:
   wait-for-first:
     runs-on: ubuntu-latest
     outputs:
-      conclusion: ${{ steps.wait.outputs.result }}
+      conclusion: ${{ steps.wait.outputs.conclusion }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +26,7 @@ jobs:
 
   second:
     needs: wait-for-first
-    if: ${{ needs.wait-for-first.outputs.result == 'success' }}
+    if: ${{ needs.wait-for-first.outputs.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "🚀 Running Second Workflow after First"
