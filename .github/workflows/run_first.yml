@@ -1,17 +1,17 @@
-name: First Workflow
+# name: First Workflow
  
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-permissions:
-  contents: read
-  statuses: write
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "First workflow is running..."
-      - run: sleep 45
-      - run: echo "First workflow finishe"
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#     branches:
+#       - main
+# permissions:
+#   contents: read
+#   statuses: write
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - run: echo "First workflow is running..."
+#       - run: sleep 45
+#       - run: echo "First workflow finishe"
