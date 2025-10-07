@@ -2,12 +2,8 @@ name: Second Workflow
 
 on:
   pull_request:
-  workflow_run:
-    workflows: ["First Workflow"]
-    types:
-      - completed
-  workflow_dispatch:
-  workflow_call:
+    branches:
+      - main
 
 permissions:
   actions: read
@@ -16,23 +12,21 @@ permissions:
 jobs:
   wait-for-first:
     runs-on: ubuntu-latest
+    outputs:
+      conclusion: ${{ steps.wait.outputs.conclusion }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Wait for First Workflow
-        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@399-feat-add-composite-action-for-workflow-dispatch-in-pr-builds
+        id: wait
+        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@main
         with:
-          workflow: "run_first.yml"
-          # sha: ${{ github.sha }}
-
+          workflow: "dev_build.yml"
           token: ${{ secrets.GITHUB_TOKEN }}
-          # pr-number: ${{ github.event.pull_request.number }}
 
   second:
     needs: wait-for-first
+    if: ${{ needs.wait-for-first.outputs.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "🚀 Running Second Workflow after First"
-
-
-
