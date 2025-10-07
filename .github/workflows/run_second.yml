@@ -21,7 +21,7 @@ jobs:
         id: wait
         uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@main
         with:
-          workflow: "dev_build.yml"
+          workflow: "dev-build.yml"
           token: ${{ secrets.GITHUB_TOKEN }}
 
   second:

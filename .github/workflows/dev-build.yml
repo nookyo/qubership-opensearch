@@ -64,26 +64,26 @@ jobs:
           replace-symbol: "_"
           dry-run: ${{ inputs.dry-run }}
 
-  build:
-    name: Build Docker Images
-    needs: [prepare]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJson(needs.prepare.outputs.components) }}
-    steps:
-      - name: Docker
-        uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
-        with:
-          ref: ${{ github.ref }}
-          dry-run: ${{ inputs.dry-run }}
-          download-artifact: false
-          component: ${{ toJson(matrix.component) }}
-          platforms: ${{ needs.prepare.outputs.platforms }}
-          tags: ${{ needs.prepare.outputs.metadata }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build:
+  #   name: Build Docker Images
+  #   needs: [prepare]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       component: ${{ fromJson(needs.prepare.outputs.components) }}
+  #   steps:
+  #     - name: Docker
+  #       uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
+  #       with:
+  #         ref: ${{ github.ref }}
+  #         dry-run: ${{ inputs.dry-run }}
+  #         download-artifact: false
+  #         component: ${{ toJson(matrix.component) }}
+  #         platforms: ${{ needs.prepare.outputs.platforms }}
+  #         tags: ${{ needs.prepare.outputs.metadata }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
