@@ -1,0 +1,20 @@
+name: Test flow for Matadata action
+on: 
+  workflow_dispatch:
+
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+
+          - uses: netcracker/qubership-workflow-hub/actions/metadata-action@398-feat-add-configurable-replacement-for-in-metadata-action
+            id: meta
+            with:
+                replace-symbol: "_"
+
+          - name: Run Test
+            run: |
+              echo "🚀 Running Test Workflow"
+              echo "Metadata: ${{ steps.meta.outputs.result }}"
