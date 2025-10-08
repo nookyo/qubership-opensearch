@@ -56,7 +56,7 @@ jobs:
           echo "platforms=$(jq -c '.platforms' .github/dev-build-config.json)" >> "$GITHUB_OUTPUT"
 
       - name: Create tags for images
-        uses: netcracker/qubership-workflow-hub/actions/metadata-action@main
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@408-feat-action-logger-publish-shared-logger-to-github-packages
         id: meta
         with:
           extra-tags: ${{ github.event.inputs.tags }}
@@ -67,26 +67,26 @@ jobs:
       - run: |
              echo Metadata: ${{ steps.meta.outputs.result }}
 
-  build:
-    name: Build Docker Images
-    needs: [prepare]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJson(needs.prepare.outputs.components) }}
-    steps:
-      - name: Docker
-        uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
-        with:
-          ref: ${{ github.ref }}
-          dry-run: ${{ inputs.dry-run }}
-          download-artifact: false
-          component: ${{ toJson(matrix.component) }}
-          platforms: ${{ needs.prepare.outputs.platforms }}
-          tags: ${{ needs.prepare.outputs.tags }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build:
+  #   name: Build Docker Images
+  #   needs: [prepare]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       component: ${{ fromJson(needs.prepare.outputs.components) }}
+  #   steps:
+  #     - name: Docker
+  #       uses: netcracker/qubership-workflow-hub/actions/docker-action@v1.0.7
+  #       with:
+  #         ref: ${{ github.ref }}
+  #         dry-run: ${{ inputs.dry-run }}
+  #         download-artifact: false
+  #         component: ${{ toJson(matrix.component) }}
+  #         platforms: ${{ needs.prepare.outputs.platforms }}
+  #         tags: ${{ needs.prepare.outputs.tags }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

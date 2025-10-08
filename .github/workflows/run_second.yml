@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for First Workflow
+      - name: Wait for Build
         id: wait
         uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@main
         with:
